@@ -1,0 +1,18 @@
+{
+  "name": "dataimporter",
+  "version": "1.0.0",
+  "keywords": [
+    "util",
+    "functional",
+    "server",
+    "client",
+    "browser"
+  ],
+  "author": "Robert Tizzard",
+  "contributors": [],
+  "dependencies": {
+    "chokidar": "^1.6.0",
+    "comma-separated-values": "^3.6.4",
+    "sqlite3": "^3.1.6"
+  }
+}
