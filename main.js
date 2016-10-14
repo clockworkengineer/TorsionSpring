@@ -24,112 +24,27 @@
 
 // Node.js specific imports
 
-var path = require('path');
-var fs = require('fs');
-
-// Currently SQLIt is only SQL supported
-
-var sqlite3 = require('sqlite3');
+var path = require("path");
+var fs = require("fs");
 
 // CSV processing and file watch packages.
 
-var CSV = require('comma-separated-values');
-var chokidar = require('chokidar');
+var CSV = require("comma-separated-values");
+var chokidar = require("chokidar");
 
 // Watch and destination folders
 
-var kWatchFolder = './watch/';
-var kDestinationFolder = './json/';
+var environment = require("./di_environment.js");
 
-// Customization processing. Indexed by file name.
+environment.createFolders();
 
-var customised = [];
-customised["Accupedo daily logs"] = {translator: accupedo, options: {header: ['year', 'month', 'day', 'steps', 'miles', 'calories', 'duration']}, database: SQLite, databaseName: "accupedo", tableName : "walks"};
+// Pull in custimsations file 
 
-// The CSV created by accupedo has three numeric fields for the date so just convert
-// those to somthing sensible and copy the rest. Also the file doesn't contain a
-// header but chokidar will have added those for us.
-
-function accupedo(record) {
-    var newRecord = {};
-    var dateOfExecersize = new Date(record.year, record.month, record.day);
-    newRecord['date'] = dateOfExecersize.toDateString();
-    newRecord['steps'] = record.steps;
-    newRecord['miles'] = record.miles;
-    newRecord['calories'] = record.calories;
-    newRecord['duration'] = record.duration;
-    return(newRecord);
-}
-
-// Insert data into a SQLite data base and given table.
-// If they to not exist then they are created. The table 
-// fields all being of type text.
-
-function SQLite(databaseName, tableName, dataJSON) {
-
-    var exists = fs.existsSync(databaseName+".db");
-
-    if (!exists) {
-        console.log("Creating DB file.");
-        fs.closeSync(fs.openSync(databaseName+".db", "w"));
-    }
-
-    // Setup column names for create table and also placeholder string for 
-    // insert query (i.e "? ? ?...").
-    
-    colNames = [];
-    colPlaceHolder = [];
-    for (var key in dataJSON[0]) {
-        if (dataJSON[0].hasOwnProperty(key)) {
-            colNames.push(key + " TEXT");
-            colPlaceHolder.push("?");
-        }
-    }
-
-    db = new sqlite3.Database(databaseName+".db");
-
-    db.serialize(function () {
-
-        query = "CREATE TABLE IF NOT EXISTS '" + tableName + "' (" + colNames.join(",") + ");";
-        db.run(query, function (err) {
-            if (err) {
-                console.log(err);
-            }
-        });
-
-        var stmt = db.prepare("INSERT INTO '" + tableName + "' VALUES (" + colPlaceHolder.join(",") + ")");
-
-        for (var row in dataJSON) {
-
-            colValues = [];
-
-            for (var vals in dataJSON[row]) {
-
-                if (dataJSON[row].hasOwnProperty(vals)) {
-                    colValues.push("'" + dataJSON[row][vals] + "'");
-
-                }
-            }
-
-            stmt.run(colValues, function (err) {
-                if (err) {
-                    console.log(err);
-                }
-            });
-
-        }
-        
-        stmt.finalize();
-
-    });
-
-    db.close();
-
-}
+var customisations = require("./di_customisations.js");
 
 //  Setup up folder watcher.
 
-var watcher = chokidar.watch(kWatchFolder, {
+var watcher = chokidar.watch(environment.watchFolder, {
     ignored: /[\/\\]\./,
     persistent: true
 });
@@ -137,61 +52,48 @@ var watcher = chokidar.watch(kWatchFolder, {
 // CSV file added. Read its data and convert to JSON and then
 // to any database specfied.
 
-watcher.on('add', function (filename) {
+watcher.on("add", function (filename) {
 
-    fs.readFile(filename, 'utf8', function (err, data) {
+    fs.readFile(filename, "utf8", function (err, data) {
 
         var dataJSON = [];
 
         if (err) {
-            
+
             throw err;
-            
+
         } else {
 
-            // Use custom handler if one is avaiable.
-            
-            var  custom = customised[path.basename(filename)];
-            
-            // File does not have custom processing so assume first line contains field value and convert.
-
-            if (!custom) {
-
-                console.log(path.basename(filename) + " does not have an translator. Defaulting to header present.");
-                dataJSON = CSV.parse(data, {header: true});
-                SQLite("default", path.parse(filename).name, dataJSON);
-
-            } else {
-
-                // Use customised function.
-
+            var custom = customisations(path.basename(filename), {databaseName: "default", tableName: path.parse(filename).name});
+       
+            if (custom.databaseName === "default") {
                 CSV.forEach(data, custom.options, function (record) {
                     dataJSON.push(custom.translator(record));
                 });
-
-               custom.database(custom.databaseName, custom.tableName, dataJSON);
-                
+            } else {
+                dataJSON = CSV.parse(data, custom.options);
             }
 
+            custom.handler(custom.params, dataJSON);
 
             // Write JSON to destination file and delete source.
 
-            fs.writeFile(kDestinationFolder + path.basename(filename) + ".json", JSON.stringify(dataJSON), function (err) {
+            fs.writeFile(environment.destinationFolder + path.basename(filename) + ".json", JSON.stringify(dataJSON), function (err) {
                 if (err) {
-                   console.log(err);
-               } else {
-                  console.log("JSON saved to " + path.basename(filename) + ".json");
-                  fs.unlinkSync(filename);
-                  console.log("Deleting source file : " + filename);
-              }
-             });
+                    console.log(err);
+                } else {
+                    console.log("JSON saved to " + path.basename(filename) + ".json");
+                    fs.unlinkSync(filename);
+                    console.log("Deleting source file : " + filename);
+                }
+            });
         }
     });
 });
 
 // Clean up processing.
 
-process.on('exit', function () {
+process.on("exit", function () {
     console.log("Exiting");
 });
 
