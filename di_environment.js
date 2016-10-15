@@ -22,14 +22,15 @@
  * THE SOFTWARE.
  */
 
-// File system
+// Node File system
 
 var fs = require("fs");
 
-// Watch and destination folders
+// Watch and destination folders and file copied check delay in seconds.
 
 var   kWatchFolder = "./watch";
 var   kDestinationFolder = "./json/";
+var   kFileCopyDelaySeconds = 1;
 
 module.exports = {
 
@@ -53,6 +54,10 @@ module.exports = {
     // Folder constants
     
     watchFolder: kWatchFolder,
-    destinationFolder: kDestinationFolder
+    destinationFolder: kDestinationFolder,
+    
+    // File copied delay check inseconds.
+    
+    fileCopyDelaySeconds : kFileCopyDelaySeconds
 
 };

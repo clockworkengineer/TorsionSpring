@@ -30,7 +30,7 @@ var db2 = require("./di_mysql");
 // Customization processing. Indexed by file name.
 
 var customisations = [];
-customisations["Accupedo daily logs"] = {translator: accupedo, options: {header: ["year", "month", "day", "steps", "miles", "calories", "duration"]}, handler: db2.SQL, params : { databaseName: "accupedo", tableName : "walks"}};
+customisations["Accupedo daily logs"] = {translator: accupedo, options: {header: ["year", "month", "day", "steps", "miles", "calories", "duration"]}, handler: db1.SQL, params : { databaseName: "accupedo", tableName : "walks"}};
 
 // The CSV created by accupedo has three numeric fields for the date so just convert
 // those to somthing sensible and copy the rest. Also the file doesn"t contain a
@@ -58,7 +58,7 @@ function leaveit(record) {
 module.exports= function (filename, params) {
     
     if (!customisations[filename]) {
-        return({translator: leaveit, options: {header: true}, handler: db2.SQL, params : params});
+        return({translator: leaveit, options: {header: true}, handler: db1.SQL, params : params});
     }
     return(customisations[filename]);
 };
