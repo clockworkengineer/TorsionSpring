@@ -38,7 +38,7 @@ var environment = require("./di_environment.js");
 
 environment.createFolders();
 
-// Pull in custimsations file 
+// Pull in customisations file 
 
 var customisations = require("./di_customisations.js");
 
@@ -52,41 +52,48 @@ var watcher = chokidar.watch(environment.watchFolder, {
 // CSV file added. Read its data and convert to JSON and then
 // to any database specfied.
 
-watcher.on("add", function (filename) {
+watcher
+    .on('ready', function() { console.log('Initial scan complete. Ready for changes.'); })
+    .on('unlink', function(path) { console.log('File: ' + path + ', has been REMOVED'); })
+    .on('error', function(err) {console.error('Chokidar file watcher failed. ERR: ' + err.message); })
+    .on("add", function (filename) {
 
     fs.readFile(filename, "utf8", function (err, data) {
 
+        console.log('File+ '+path+' has been ADDED.');
+        
         var dataJSON = [];
 
         if (err) {
-
-            throw err;
+           
+           console.error("Error Handling file: "+filename);
+           console.error(err);
 
         } else {
 
-            var custom = customisations(path.basename(filename), {databaseName: "default", tableName: path.parse(filename).name});
-       
-            if (custom.databaseName === "default") {
-                CSV.forEach(data, custom.options, function (record) {
-                    dataJSON.push(custom.translator(record));
-                });
-            } else {
-                dataJSON = CSV.parse(data, custom.options);
-            }
 
-            custom.handler(custom.params, dataJSON);
+            // Parse CSV file and produce JSON data.
+
+            var custom = customisations(path.basename(filename), {databaseName: "default", tableName: path.parse(filename).name});
+
+            dataJSON = CSV.parse(data, custom.options);
 
             // Write JSON to destination file and delete source.
 
-            fs.writeFile(environment.destinationFolder + path.basename(filename) + ".json", JSON.stringify(dataJSON), function (err) {
+            fs.writeFile(environment.destinationFolder +  path.parse(filename).name + ".json", JSON.stringify(dataJSON), function (err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                 } else {
-                    console.log("JSON saved to " + path.basename(filename) + ".json");
+                    console.log("JSON saved to " + path.parse(filename).name + ".json");
                     fs.unlinkSync(filename);
                     console.log("Deleting source file : " + filename);
                 }
             });
+
+            // Execute custom handler for data
+            
+            custom.handler(custom.params, dataJSON);
+
         }
     });
 });
@@ -97,4 +104,4 @@ process.on("exit", function () {
     console.log("Exiting");
 });
 
-console.log("DataImporter Applciation");
+console.log("DataImporter Applciation\n");

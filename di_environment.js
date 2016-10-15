@@ -22,13 +22,19 @@
  * THE SOFTWARE.
  */
 
-var fs = require('fs');
+// File system
 
-var   kWatchFolder = './watch';
-var   kDestinationFolder = './json/';
+var fs = require("fs");
+
+// Watch and destination folders
+
+var   kWatchFolder = "./watch";
+var   kDestinationFolder = "./json/";
 
 module.exports = {
 
+    //  Create folders if they do not exist.
+    
     createFolders:  function () {
 
         if (!fs.existsSync(kWatchFolder)) {
@@ -43,6 +49,8 @@ module.exports = {
             fs.mkdir(kDestinationFolder);
         }
     },
+    
+    // Folder constants
     
     watchFolder: kWatchFolder,
     destinationFolder: kDestinationFolder

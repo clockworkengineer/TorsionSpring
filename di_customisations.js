@@ -22,22 +22,23 @@
  * THE SOFTWARE.
  */
 
-// Currently SQLite is the only SQL database supported
+// Currently SQLite/MySQL are the only databases supported.
 
-var sql = require("./di_sqlite");
+var db1 = require("./di_sqlite");
+var db2 = require("./di_mysql");
 
 // Customization processing. Indexed by file name.
 
 var customisations = [];
-customisations["Accupedo daily logs"] = {translator: accupedo, options: {header: ["year", "month", "day", "steps", "miles", "calories", "duration"]}, handler: sql.SQLite, params : { databaseName: "accupedo", tableName : "walks"}};
+customisations["Accupedo daily logs"] = {translator: accupedo, options: {header: ["year", "month", "day", "steps", "miles", "calories", "duration"]}, handler: db2.SQL, params : { databaseName: "accupedo", tableName : "walks"}};
 
 // The CSV created by accupedo has three numeric fields for the date so just convert
 // those to somthing sensible and copy the rest. Also the file doesn"t contain a
-// header but chokidar will have added those for us.
+// header but chokidar will have added those for us with specifying header options above.
 
 function accupedo(record) {
     var newRecord = {};
-    var dateOfExecersize = new Date(record.year, record.month, record.day);
+    var dateOfExecersize = new Date(record.year, record.month-1, record.day);
     newRecord["date"] = dateOfExecersize.toDateString();
     newRecord["steps"] = record.steps;
     newRecord["miles"] = record.miles;
@@ -52,12 +53,12 @@ function leaveit(record) {
    return(record);
 }
 
-// No custimsation then default
+// No custimsation then use default otherwise return customiation.
 
 module.exports= function (filename, params) {
     
     if (!customisations[filename]) {
-        return({translator: leaveit, options: {header: true}, handler: sql.SQLite, params : params});
+        return({translator: leaveit, options: {header: true}, handler: db2.SQL, params : params});
     }
     return(customisations[filename]);
 };

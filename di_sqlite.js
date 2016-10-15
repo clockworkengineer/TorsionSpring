@@ -34,7 +34,7 @@ var sqlite3 = require('sqlite3');
 
 module.exports = {
 
-    SQLite: function (params, dataJSON) {
+    SQL: function (params, dataJSON) {
 
         var exists = fs.existsSync(params.databaseName + ".db");
 
@@ -55,17 +55,22 @@ module.exports = {
             }
         }
 
+        // Open connection to database
         db = new sqlite3.Database(params.databaseName + ".db");
 
         db.serialize(function () {
+            
+            // Create table if doesnt exist.
 
             query = "CREATE TABLE IF NOT EXISTS '" + params.tableName + "' (" + colNames.join(",") + ");";
             db.run(query, function (err) {
                 if (err) {
-                    console.log(err);
+                    console.error(err);
                 }
             });
 
+            // Insert records.
+            
             var stmt = db.prepare("INSERT INTO '" + params.tableName + "' VALUES (" + colPlaceHolder.join(",") + ")");
 
             for (var row in dataJSON) {
@@ -82,7 +87,7 @@ module.exports = {
 
                 stmt.run(colValues, function (err) {
                     if (err) {
-                        console.log(err);
+                        console.error(err);
                     }
                 });
 
