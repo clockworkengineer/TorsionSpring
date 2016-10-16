@@ -33,7 +33,7 @@ var CSV = require("comma-separated-values");
 var chokidar = require("chokidar");
 
 // Environment details (watch / JSON estination folders etc).
-// CHeck folders are preent creating if not.
+// Check folders are preent creating if not.
 
 var environment = require("./di_environment.js");
 environment.createFolders();
@@ -52,7 +52,9 @@ function processFile(fileName, data) {
 
     var custom = customisations(path.basename(fileName), {databaseName: "default", tableName: path.parse(fileName).name});
 
-    dataJSON = CSV.parse(data, custom.options);
+    CSV.forEach(data, custom.options, function (record) {
+        dataJSON.push(custom.translator(record));
+    });
 
     // Write JSON to destination file and delete source.
 
@@ -66,9 +68,10 @@ function processFile(fileName, data) {
         }
     });
 
-    // Execute custom handler for data
-
+    // Perform custom handler. ie write data to SQL database.
+    
     custom.handler(custom.params, dataJSON);
+
 
 }
 
@@ -84,9 +87,9 @@ function checkFileCopyComplete(fileName, prev) {
             console.error(err);
             return;
         }
-        
+
         if (stat.mtime.getTime() === prev.mtime.getTime()) {
-            
+
             fs.readFile(fileName, "utf8", function (err, data) {
 
                 if (err) {

@@ -30,6 +30,7 @@ var fs = require("fs");
 
 var   kWatchFolder = "./watch";
 var   kDestinationFolder = "./json/";
+var   kDatabaseFolder = "./databases/";
 var   kFileCopyDelaySeconds = 1;
 
 module.exports = {
@@ -42,22 +43,24 @@ module.exports = {
             console.log("Creating watch folder.");
             fs.mkdir(kWatchFolder);
         }
-        
-         var exists = fs.existsSync(kDestinationFolder);
 
         if (!fs.existsSync(kDestinationFolder)) {
             console.log("Creating json destination folder.");
             fs.mkdir(kDestinationFolder);
         }
+        
+         if (!fs.existsSync(kDatabaseFolder)) {
+            console.log("Creating database destination folder.");
+            fs.mkdir(kDatabaseFolder);
+        }
+      
     },
     
     // Folder constants
     
     watchFolder: kWatchFolder,
     destinationFolder: kDestinationFolder,
-    
-    // File copied delay check inseconds.
-    
+    databaseFolder : kDatabaseFolder,
     fileCopyDelaySeconds : kFileCopyDelaySeconds
 
 };

@@ -33,6 +33,10 @@ var pool;
 
 module.exports = {
 
+    SQLInit: function () {
+
+    },
+
     // Create a pool to handle SQL queries. Note SQL server, user and password
     // etc need to be read from a login.json in the same directory as the app.
 
@@ -41,7 +45,7 @@ module.exports = {
         try {
 
             // Connect to server
-            
+
             var loginDetails = JSON.parse(fs.readFileSync('./login.json', 'utf8'));
 
             pool = mysql.createPool({
@@ -54,7 +58,7 @@ module.exports = {
             });
 
             // Signal an error
-            
+
         } catch (err) {
 
             if (err.code === 'ENOENT') {
@@ -66,23 +70,23 @@ module.exports = {
             }
 
             // Do not go any further in handling file
-            
+
             return;
         }
 
         // Grab a pool connection
-        
+
         pool.getConnection(function (err, connection) {
 
             // Write any error message and return.
-            
+
             if (err) {
                 console.error(err);
                 return;
             }
 
             // Ready for queries.
-            
+
             console.log('connected as SQL Server id ' + connection.threadId);
 
             // Setup column names for create table and also placeholder string for 
@@ -98,7 +102,7 @@ module.exports = {
             }
 
             // Create table
-            
+
             query = "CREATE TABLE IF NOT EXISTS " + params.tableName + " (" + colNames.join(",") + ");";
 
             connection.query(query, function (err, rows) {
@@ -108,7 +112,7 @@ module.exports = {
             });
 
             // Insert records.
-            
+
             query = "INSERT INTO " + params.tableName + " VALUES (" + colPlaceHolder.join(",") + ")";
 
             for (var row in dataJSON) {
@@ -122,7 +126,7 @@ module.exports = {
 
                     }
                 }
-                
+
                 // Perform INSERT for record.
 
                 connection.query(query, colValues, function (err, rows) {
@@ -134,13 +138,17 @@ module.exports = {
             }
 
             // Release pooled conenction.
-            
+
             console.log("Server connection release.");
             connection.release();
 
         });
 
-    }
+    },
 
+    SQLTerm: function () {
+
+    }
+    
 };
 

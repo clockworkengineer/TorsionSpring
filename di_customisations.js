@@ -56,7 +56,7 @@ function leaveit(record) {
 // No custimsation then use default otherwise return customiation.
 
 module.exports= function (filename, params) {
-    
+    console.log(filename);
     if (!customisations[filename]) {
         return({translator: leaveit, options: {header: true}, handler: db1.SQL, params : params});
     }

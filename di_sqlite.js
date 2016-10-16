@@ -28,19 +28,27 @@ var fs = require('fs');
 
 var sqlite3 = require('sqlite3');
 
+var environment = require("./di_environment.js");
+
 // Insert data into a SQLite data base and given table.
 // If they to not exist then they are created. The table 
-// fields all being of type text.
+// fields all being of type TEXT.
+
+var connections = [];
 
 module.exports = {
 
+    SQLInit: function () {
+
+    },
+
     SQL: function (params, dataJSON) {
 
-        var exists = fs.existsSync(params.databaseName + ".db");
+        var databaseFileName = environment.databaseFolder + params.databaseName + ".db";
 
-        if (!exists) {
+        if (!fs.existsSync(databaseFileName)) {
             console.log("Creating DB file.");
-            fs.closeSync(fs.openSync(params.databaseName + ".db", "w"));
+            fs.closeSync(fs.openSync(databaseFileName, "w"));
         }
 
         // Setup column names for create table and also placeholder string for 
@@ -55,11 +63,25 @@ module.exports = {
             }
         }
 
-        // Open connection to database
-        db = new sqlite3.Database(params.databaseName + ".db");
+        // To prevent SQlite busy errors save  and reuse the same connection to a database.
+        // This is safe but leaves unclosed connection around until the program is closed.
+
+        if (!connections[params.databaseName]) {
+
+            connections[params.databaseName] = new sqlite3.Database(databaseFileName, function (err) {
+                if (err) {
+                    console.error(err);
+                }
+                console.log("Create new connection for " + databaseFileName);
+            });
+        } else {
+            console.log("Use existing connection for " + databaseFileName);
+        }
+
+        db = connections[params.databaseName];
 
         db.serialize(function () {
-            
+
             // Create table if doesnt exist.
 
             query = "CREATE TABLE IF NOT EXISTS '" + params.tableName + "' (" + colNames.join(",") + ");";
@@ -70,7 +92,7 @@ module.exports = {
             });
 
             // Insert records.
-            
+
             var stmt = db.prepare("INSERT INTO '" + params.tableName + "' VALUES (" + colPlaceHolder.join(",") + ")");
 
             for (var row in dataJSON) {
@@ -84,11 +106,11 @@ module.exports = {
 
                     }
                 }
-
                 stmt.run(colValues, function (err) {
                     if (err) {
                         console.error(err);
                     }
+
                 });
 
             }
@@ -97,8 +119,17 @@ module.exports = {
 
         });
 
-        db.close();
 
+    },
+
+    SQLTerm: function () {
+
+        for (var conn in connections) {
+            console.log ("Closing connection to "+conn);
+            connections[conn].close();
+        }
+        
+        connections = [];
+            
     }
-
 };
