@@ -22,25 +22,33 @@
  * THE SOFTWARE.
  */
 
+// File system module
+
 var fs = require('fs');
 
-// Currently SQLite is the only SQL database supported
+//  SQLite wrapper.
 
 var sqlite3 = require('sqlite3');
 
+// Application evironment data.
+
 var environment = require("./di_environment.js");
 
-// Insert data into a SQLite data base and given table.
-// If they to not exist then they are created. The table 
-// fields all being of type TEXT.
+// Cached SQLite connection indexed by file.
 
 var connections = [];
 
 module.exports = {
 
+    // SQLite Initialisation.
+
     SQLInit: function () {
 
     },
+
+    // Insert data into a SQLite data base and given table.
+    // If they to not exist then they are created. The table 
+    // fields all being of type TEXT.
 
     SQL: function (params, dataJSON) {
 
@@ -122,14 +130,16 @@ module.exports = {
 
     },
 
+    // SQLite Termination.
+
     SQLTerm: function () {
 
         for (var conn in connections) {
-            console.log ("Closing connection to "+conn);
+            console.log("Closing connection to " + conn);
             connections[conn].close();
         }
-        
+
         connections = [];
-            
+
     }
 };

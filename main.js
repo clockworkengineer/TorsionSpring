@@ -27,18 +27,18 @@
 var path = require("path");
 var fs = require("fs");
 
-// CSV processing and file watch packages.
+// CSV processing and file watch modules.
 
 var CSV = require("comma-separated-values");
 var chokidar = require("chokidar");
 
-// Environment details (watch / JSON estination folders etc).
+// Environment details (watch / json destination folders etc).
 // Check folders are preent creating if not.
 
 var environment = require("./di_environment.js");
 environment.createFolders();
 
-// Pull in customisations file 
+// Customisation translations file 
 
 var customisations = require("./di_customisations.js");
 
@@ -46,7 +46,9 @@ var customisations = require("./di_customisations.js");
 
 function processFile(fileName, data) {
 
-    // Parse CSV file and produce JSON data.
+    // Parse CSV file and produce JSON data. Pass in default
+    // database and table nameto use if no customised translator
+    // found.
 
     var dataJSON = [];
 

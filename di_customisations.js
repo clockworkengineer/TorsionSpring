@@ -53,7 +53,7 @@ function leaveit(record) {
    return(record);
 }
 
-// No custimsation then use default otherwise return customiation.
+// No customsation then use default otherwise return selected customsation.
 
 module.exports= function (filename, params) {
     console.log(filename);

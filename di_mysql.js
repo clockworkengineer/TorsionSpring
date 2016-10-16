@@ -22,16 +22,21 @@
  * THE SOFTWARE.
  */
 
-// File handling module
+// File system module
 
 var fs = require('fs');
 
-// Import for MySQL bindings
+// MySQL wrapper
 
 var mysql = require('mysql');
+
+// MySQL connection pool 
+
 var pool;
 
 module.exports = {
+
+    // MySQL initialisation code
 
     SQLInit: function () {
 
@@ -146,9 +151,11 @@ module.exports = {
 
     },
 
+    // MySQL termination.
+    
     SQLTerm: function () {
 
     }
-    
+
 };
 

@@ -26,7 +26,7 @@
 
 var fs = require("fs");
 
-// Watch and destination folders and file copied check delay in seconds.
+// Watch, destination, database folders and file copied check delay in seconds.
 
 var   kWatchFolder = "./watch";
 var   kDestinationFolder = "./json/";
@@ -56,7 +56,7 @@ module.exports = {
       
     },
     
-    // Folder constants
+    // Folder and delay constants
     
     watchFolder: kWatchFolder,
     destinationFolder: kDestinationFolder,
